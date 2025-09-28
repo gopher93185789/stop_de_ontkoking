@@ -25,18 +25,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       errors.password = "Password must be at least 8 characters";
     }
 
+    // If username is provided, validate it
+    if (body.username && body.username.length < 3) {
+      errors.username = "Username must be at least 3 characters";
+    }
+
     // Return validation errors if any
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    // Check if user already exists
-    const existingUser = await db.query(
+    // Check if user already exists by email
+    const existingUserByEmail = await db.query(
       "SELECT * FROM users WHERE email = $1",
       [body.email]
     );
 
-    if (existingUser.rowCount && existingUser.rowCount > 0) {
+    if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
       return NextResponse.json(
         {
           success: false,
@@ -46,18 +51,42 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // If a username is provided, check if it already exists
+    if (body.username) {
+      const existingUserByUsername = await db.query(
+        "SELECT * FROM users WHERE username = $1",
+        [body.username]
+      );
+
+      if (
+        existingUserByUsername.rowCount &&
+        existingUserByUsername.rowCount > 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            errors: { username: "Username is already taken" },
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Hash password
     const passwordHash = await argon2.hash(body.password);
 
     // Set default role if not provided
     const role = body.role || UserRole.USER;
 
+    // Use provided username or email as username if not provided
+    const username = body.username || body.email;
+
     // Insert user into database
     const result = await db.query(
-      `INSERT INTO users (name, email, password_hash, role, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())
-       RETURNING id, name, email, role, created_at`,
-      [body.name, body.email, passwordHash, role]
+      `INSERT INTO users (username, name, email, password_hash, role, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       RETURNING id, username, name, email, role, created_at`,
+      [username, body.name, body.email, passwordHash, role]
     );
 
     const newUser = result.rows[0];
@@ -65,6 +94,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Generate JWT token
     const token = generateJwtToken({
       id: newUser.id,
+      username: newUser.username,
       email: newUser.email,
       role: newUser.role,
     });
@@ -76,6 +106,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         message: "User registered successfully",
         user: {
           id: newUser.id,
+          username: newUser.username,
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,

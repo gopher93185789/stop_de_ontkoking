@@ -27,7 +27,7 @@ async function getUserProfile(
 
     // Fetch the user data from the database
     const userResult = await db.query(
-      `SELECT id, name, email, role, created_at, updated_at 
+      `SELECT id, username, name, email, role, created_at, updated_at 
        FROM users 
        WHERE id = $1`,
       [userId]
@@ -51,6 +51,7 @@ async function getUserProfile(
         success: true,
         user: {
           id: user.id,
+          username: user.username,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -93,14 +94,37 @@ async function updateUserProfile(
       );
     }
 
-    // Parse the request body
-    const body = (await req.json()) as UserProfileUpdateInput;
+    // Parse the request body with error handling
+    let body: UserProfileUpdateInput;
+    try {
+      const rawData = await req.text();
+      console.log("Raw request body:", rawData); // Log the raw request for debugging
+      body = JSON.parse(rawData) as UserProfileUpdateInput;
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Invalid JSON in request body. Please ensure your request contains valid JSON.",
+          error:
+            parseError instanceof Error
+              ? parseError.message
+              : "Unknown parse error",
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate the request body
     const errors: Record<string, string> = {};
 
     if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
       errors.email = "Please enter a valid email address";
+    }
+
+    if (body.username && body.username.length < 3) {
+      errors.username = "Username must be at least 3 characters";
     }
 
     if (body.password) {
@@ -178,6 +202,24 @@ async function updateUserProfile(
       }
     }
 
+    // Check username uniqueness if updating username
+    if (body.username && body.username !== user.username) {
+      const usernameExists = await db.query(
+        "SELECT COUNT(*) as count FROM users WHERE username = $1 AND id != $2",
+        [body.username, userId]
+      );
+
+      if (usernameExists.rows[0].count > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            errors: { username: "Username is already taken" },
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build the update query dynamically
     const updates: string[] = [];
     const values: Array<string | number> = [];
@@ -186,6 +228,11 @@ async function updateUserProfile(
     if (body.name) {
       updates.push(`name = $${paramIndex++}`);
       values.push(body.name);
+    }
+
+    if (body.username) {
+      updates.push(`username = $${paramIndex++}`);
+      values.push(body.username);
     }
 
     if (body.email) {
@@ -212,6 +259,7 @@ async function updateUserProfile(
           message: "No changes to update",
           user: {
             id: user.id,
+            username: user.username,
             name: user.name,
             email: user.email,
             role: user.role,
@@ -228,7 +276,7 @@ async function updateUserProfile(
       `UPDATE users 
        SET ${updates.join(", ")} 
        WHERE id = $${paramIndex}
-       RETURNING id, name, email, role, created_at, updated_at`,
+       RETURNING id, username, name, email, role, created_at, updated_at`,
       values
     );
 
@@ -241,6 +289,7 @@ async function updateUserProfile(
         message: "Profile updated successfully",
         user: {
           id: updatedUser.id,
+          username: updatedUser.username,
           name: updatedUser.name,
           email: updatedUser.email,
           role: updatedUser.role,

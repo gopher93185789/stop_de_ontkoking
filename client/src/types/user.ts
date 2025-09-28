@@ -7,6 +7,7 @@ export enum UserRole {
 // User interface
 export interface User {
   id: number;
+  username: string;
   name: string;
   email: string;
   password_hash: string;
@@ -20,6 +21,7 @@ export interface UserCreateInput {
   name: string;
   email: string;
   password: string;
+  username?: string; // Optional, will default to email if not provided
   role?: UserRole; // Optional, defaults to USER
 }
 
@@ -33,6 +35,7 @@ export interface LoginInput {
 // User response (for API responses, without sensitive data)
 export interface UserResponse {
   id: number;
+  username: string;
   name: string;
   email: string;
   role: UserRole;
@@ -43,6 +46,7 @@ export interface UserResponse {
 export interface UserProfileUpdateInput {
   name?: string;
   email?: string;
+  username?: string;
   password?: string;
   current_password?: string; // Required when updating password
 }
@@ -58,6 +62,7 @@ export interface AuthResponse {
 // JWT payload interface
 export interface JwtPayload {
   userId: number;
+  username: string;
   email: string;
   role: UserRole;
   iat?: number;

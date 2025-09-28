@@ -3,7 +3,7 @@ import { User, JwtPayload } from "@/types/user";
 
 // Function to generate JWT token
 export function generateJwtToken(
-  user: Pick<User, "id" | "email" | "role">,
+  user: Pick<User, "id" | "username" | "email" | "role">,
   expiresIn: string = "7d" // Default expiration
 ): string {
   if (!process.env.JWT_SECRET) {
@@ -12,6 +12,7 @@ export function generateJwtToken(
 
   const payload: JwtPayload = {
     userId: user.id,
+    username: user.username,
     email: user.email,
     role: user.role,
   };
@@ -27,7 +28,7 @@ export function generateJwtToken(
 
 // Function to generate refresh token (longer lived)
 export function generateRefreshToken(
-  user: Pick<User, "id" | "email" | "role">
+  user: Pick<User, "id" | "username" | "email" | "role">
 ): string {
   return generateJwtToken(user, "30d"); // 30 days expiration
 }

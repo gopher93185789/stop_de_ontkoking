@@ -29,7 +29,8 @@ Create a new user account.
 {
   "name": "John Doe",
   "email": "john.doe@example.com",
-  "password": "securePassword123"
+  "password": "securePassword123",
+  "username": "johndoe" // Optional, will use email if not provided
 }
 ```
 
@@ -43,6 +44,7 @@ Create a new user account.
   "message": "User created successfully",
   "user": {
     "id": "123e4567-e89b-12d3-a456-426614174000",
+    "username": "john.doe",
     "name": "John Doe",
     "email": "john.doe@example.com",
     "role": "user",
@@ -315,6 +317,7 @@ Update the current user's profile information.
 ```json
 {
   "name": "Updated Name",
+  "username": "updated_username",
   "email": "updated.email@example.com",
   "password": "newPassword123",
   "current_password": "oldPassword123"
@@ -333,6 +336,7 @@ All fields are optional. To update the password, both `password` and `current_pa
   "message": "Profile updated successfully",
   "user": {
     "id": "123e4567-e89b-12d3-a456-426614174000",
+    "username": "updated_username",
     "name": "Updated Name",
     "email": "updated.email@example.com",
     "role": "user",
@@ -360,7 +364,7 @@ All fields are optional. To update the password, both `password` and `current_pa
 curl -X PUT http://localhost:3000/api/auth/me \
   -H "Content-Type: application/json" \
   --cookie "auth_token=your_jwt_token_here" \
-  -d '{"name":"Updated Name","email":"updated.email@example.com"}'
+  -d '{"name":"Updated Name","username":"updated_username","email":"updated.email@example.com"}'
 ```
 
 ```javascript
@@ -373,6 +377,7 @@ const response = await fetch("/api/auth/me", {
   credentials: "include",
   body: JSON.stringify({
     name: "Updated Name",
+    username: "updated_username",
     email: "updated.email@example.com",
   }),
 });
