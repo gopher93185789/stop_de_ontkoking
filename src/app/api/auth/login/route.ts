@@ -68,6 +68,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Generate JWT token
     const token = generateJwtToken({
       id: user.id,
+      username: user.username,
       email: user.email,
       role: user.role,
     });
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (body.rememberMe) {
       const refreshToken = generateRefreshToken({
         id: user.id,
+        username: user.username,
         email: user.email,
         role: user.role,
       });

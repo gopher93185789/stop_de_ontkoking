@@ -63,6 +63,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Generate a new access token
     const newToken = generateJwtToken({
       id: user.id,
+      username: user.username,
       email: user.email,
       role: user.role,
     });
