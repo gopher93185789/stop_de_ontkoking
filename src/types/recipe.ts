@@ -9,8 +9,12 @@ export interface Recipe {
   cooking_time: number; // in minutes
   servings: number;
   instructions: string[];
+  image_url?: string; // Optional recipe image
   created_at: string;
   updated_at: string;
+  // Owner info (joined from auth.users)
+  owner_name?: string;
+  owner_avatar?: string;
 }
 
 export type MealType =

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
@@ -19,9 +20,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Clock, Users, ChefHat, ArrowLeft, Edit, Trash2 } from "lucide-react"
+import { Clock, Users, ChefHat, ArrowLeft, Edit, Trash2, Image as ImageIcon } from "lucide-react"
 import { formatTime, formatDate } from "@/lib/utils"
 import Link from "next/link"
+import Image from "next/image"
 
 const mealTypeLabels: Record<Recipe["meal_type"], string> = {
   breakfast: "Ontbijt",
@@ -35,14 +37,27 @@ const mealTypeLabels: Record<Recipe["meal_type"], string> = {
 export default function RecipeDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, loading: authLoading } = useAuth()
   const { toast } = useToast()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Redirect to signup if user is not logged in
   useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "Inloggen vereist",
+        description: "Je moet ingelogd zijn om recepten te bekijken.",
+      })
+      router.push("/signup")
+    }
+  }, [user, authLoading, router, toast])
+
+  useEffect(() => {
+    if (!user && !authLoading) return // Don't fetch if not logged in
+
     const fetchRecipe = async () => {
       try {
         const data = await recipeAPI.getById(params.id as string)
@@ -59,7 +74,7 @@ export default function RecipeDetailPage() {
     }
 
     fetchRecipe()
-  }, [params.id])
+  }, [params.id, user, authLoading, toast])
 
   const handleDelete = async () => {
     if (!recipe) return
@@ -101,7 +116,7 @@ export default function RecipeDetailPage() {
 
   if (!recipe) {
     return (
-      <div className="container py-12 text-center">
+      <div className="container py-12 max-w-4xl mx-auto text-center">
         <h1 className="text-2xl font-bold mb-4">Recept niet gevonden</h1>
         <Button asChild>
           <Link href="/recepten">Terug naar recepten</Link>
@@ -110,11 +125,11 @@ export default function RecipeDetailPage() {
     )
   }
 
-  const canEdit = user && (user.id === Number(recipe.owner_id) || isAdmin)
+  const canEdit = user && (user.id === recipe.owner_id || isAdmin)
   const totalTime = recipe.preparation_time + recipe.cooking_time
 
   return (
-    <div className="container py-12 max-w-4xl">
+    <div className="container py-12 max-w-4xl mx-auto">
       <Button variant="ghost" asChild className="mb-6">
         <Link href="/recepten">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -123,6 +138,18 @@ export default function RecipeDetailPage() {
       </Button>
 
       <div className="space-y-8">
+        {/* Recipe Image */}
+        {recipe.image_url && (
+          <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
+            <Image
+              src={recipe.image_url}
+              alt={recipe.name}
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div>
           <div className="flex items-start justify-between mb-4">
@@ -132,9 +159,28 @@ export default function RecipeDetailPage() {
                 <Badge>{mealTypeLabels[recipe.meal_type]}</Badge>
               </div>
               <p className="text-lg text-muted-foreground">{recipe.description}</p>
-              <p className="text-sm text-muted-foreground">
-                Toegevoegd op {formatDate(recipe.created_at)}
-              </p>
+              
+              {/* Owner Info */}
+              {recipe.owner_name && (
+                <div className="flex items-center gap-2 mt-3">
+                  <Avatar className="h-8 w-8">
+                    {recipe.owner_avatar && (
+                      <AvatarImage src={recipe.owner_avatar} alt={recipe.owner_name} />
+                    )}
+                    <AvatarFallback className="text-sm">
+                      {recipe.owner_name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {recipe.owner_name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(recipe.created_at)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             {canEdit && (
               <div className="flex gap-2">

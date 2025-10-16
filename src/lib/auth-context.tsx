@@ -1,65 +1,80 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { UserResponse } from "@/types/user"
-import { authAPI } from "./api"
+import { createContext, useContext, useState, useEffect } from "react"
+import { supabase } from "./supabase"
+import type { User } from "@supabase/supabase-js"
 
 interface AuthContextType {
-  user: UserResponse | null
-  loading: boolean
-  login: (user: UserResponse) => void
+  user: User | null
+  login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
-  refreshUser: () => Promise<void>
   isAdmin: boolean
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserResponse | null>(null)
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-
-  const refreshUser = async () => {
-    try {
-      const { user } = await authAPI.me()
-      setUser(user)
-    } catch (error) {
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    refreshUser()
+    // Check active session
+    supabase!.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase!.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = (userData: UserResponse) => {
-    setUser(userData)
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase!.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw new Error(error.message)
+    setUser(data.user)
+  }
+
+  const signup = async (email: string, password: string, name: string) => {
+    const { data, error } = await supabase!.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    })
+    if (error) throw new Error(error.message)
+    setUser(data.user)
   }
 
   const logout = async () => {
-    try {
-      await authAPI.logout()
-    } catch (error) {
-      console.error("Logout error:", error)
-    } finally {
-      setUser(null)
-    }
+    const { error } = await supabase!.auth.signOut()
+    if (error) throw new Error(error.message)
+    setUser(null)
   }
 
-  const isAdmin = user?.role === "admin"
-
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, logout, refreshUser, isAdmin }}
-    >
+    <AuthContext.Provider value={{ user, login, signup, logout, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")

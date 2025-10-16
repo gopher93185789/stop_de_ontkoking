@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { uploadImage } from "@/lib/image-upload"
 
 export default function EditRecipePage() {
   const params = useParams()
@@ -51,7 +52,7 @@ export default function EditRecipePage() {
 
   useEffect(() => {
     if (recipe && user && !authLoading) {
-      const canEdit = user.id === Number(recipe.owner_id) || isAdmin
+      const canEdit = user.id === recipe.owner_id || isAdmin
       if (!canEdit) {
         toast({
           variant: "destructive",
@@ -61,14 +62,33 @@ export default function EditRecipePage() {
         router.push(`/recepten/${recipe.id}`)
       }
     }
-  }, [recipe, user, authLoading, isAdmin, router])
+  }, [recipe, user, authLoading, isAdmin, router, toast])
 
-  const handleSubmit = async (data: Partial<Recipe>) => {
+  const handleSubmit = async (data: Partial<Recipe>, imageFile?: File | null) => {
     if (!recipe) return
 
     setIsSubmitting(true)
     try {
-      await recipeAPI.update(recipe.id, data)
+      let image_url = recipe.image_url
+
+      // Upload new image if provided
+      if (imageFile && user) {
+        try {
+          image_url = await uploadImage(imageFile, "recipe-images", user.id)
+        } catch (error: any) {
+          toast({
+            variant: "destructive",
+            title: "Fout bij uploaden afbeelding",
+            description: error.message,
+          })
+          // Continue with old image
+        }
+      }
+
+      await recipeAPI.update(recipe.id, {
+        ...data,
+        image_url,
+      })
       toast({
         title: "Recept bijgewerkt!",
         description: "Je wijzigingen zijn succesvol opgeslagen.",
@@ -87,7 +107,7 @@ export default function EditRecipePage() {
 
   if (loading || authLoading) {
     return (
-      <div className="container py-12 max-w-4xl">
+      <div className="container py-12 max-w-4xl mx-auto">
         <Skeleton className="h-10 w-32 mb-8" />
         <Skeleton className="h-12 w-64 mb-4" />
         <Skeleton className="h-6 w-full mb-8" />
@@ -103,7 +123,7 @@ export default function EditRecipePage() {
   }
 
   return (
-    <div className="container py-12 max-w-4xl">
+    <div className="container py-12 max-w-4xl mx-auto">
       <Button variant="ghost" asChild className="mb-6">
         <Link href={`/recepten/${recipe.id}`}>
           <ArrowLeft className="mr-2 h-4 w-4" />

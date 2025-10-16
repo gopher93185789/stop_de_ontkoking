@@ -18,7 +18,7 @@ interface SearchBarProps {
 }
 
 const mealTypeOptions = [
-  { value: "", label: "Alle types" },
+  { value: "all", label: "Alle types" },
   { value: "breakfast", label: "Ontbijt" },
   { value: "lunch", label: "Lunch" },
   { value: "dinner", label: "Diner" },
@@ -29,11 +29,11 @@ const mealTypeOptions = [
 
 export function SearchBar({ onSearch }: SearchBarProps) {
   const [ingredients, setIngredients] = useState("")
-  const [mealType, setMealType] = useState<MealType | "">("")
+  const [mealType, setMealType] = useState<MealType | "all">("all")
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    onSearch(ingredients, mealType)
+    onSearch(ingredients, mealType === "all" ? "" : mealType)
   }
 
   return (
@@ -48,7 +48,7 @@ export function SearchBar({ onSearch }: SearchBarProps) {
             className="pl-9"
           />
         </div>
-        <Select value={mealType} onValueChange={(value) => setMealType(value as MealType | "")}>
+        <Select value={mealType} onValueChange={(value) => setMealType(value as MealType | "all")}>
           <SelectTrigger className="w-full md:w-[200px]">
             <SelectValue placeholder="Type gerecht" />
           </SelectTrigger>

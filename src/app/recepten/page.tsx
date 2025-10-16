@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { recipeAPI } from "@/lib/api"
 import { Recipe, MealType } from "@/types/recipe"
 import { SearchBar } from "@/components/search-bar"
@@ -9,8 +11,12 @@ import { RecipeGridSkeleton } from "@/components/loading-skeletons"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function RecipesPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+  const { toast } = useToast()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [searchIngredients, setSearchIngredients] = useState("")
@@ -19,7 +25,20 @@ export default function RecipesPage() {
   const [totalPages, setTotalPages] = useState(1)
   const limit = 9
 
+  // Redirect to signup if user is not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "Inloggen vereist",
+        description: "Je moet ingelogd zijn om recepten te bekijken.",
+      })
+      router.push("/signup")
+    }
+  }, [user, authLoading, router, toast])
+
   const fetchRecipes = async () => {
+    if (!user) return // Don't fetch if not logged in
+    
     setLoading(true)
     try {
       const response = await recipeAPI.search({
@@ -38,8 +57,10 @@ export default function RecipesPage() {
   }
 
   useEffect(() => {
-    fetchRecipes()
-  }, [page])
+    if (user && !authLoading) {
+      fetchRecipes()
+    }
+  }, [page, user, authLoading])
 
   const handleSearch = (ingredients: string, mealType: MealType | "") => {
     setSearchIngredients(ingredients)
@@ -48,13 +69,13 @@ export default function RecipesPage() {
   }
 
   useEffect(() => {
-    if (page === 1) {
+    if (page === 1 && user && !authLoading) {
       fetchRecipes()
     }
-  }, [searchIngredients, searchMealType])
+  }, [searchIngredients, searchMealType, user, authLoading])
 
   return (
-    <div className="container py-12">
+    <div className="container py-12 max-w-7xl mx-auto">
       <div className="space-y-8">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold">Ontdek Recepten</h1>

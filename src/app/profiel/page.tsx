@@ -8,10 +8,11 @@ import { Recipe } from "@/types/recipe"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RecipeCard } from "@/components/recipe-card"
 import { RecipeGridSkeleton } from "@/components/loading-skeletons"
 import { EmptyState } from "@/components/empty-state"
+import { ProfileAvatarEditor } from "@/components/profile-avatar-editor"
 import { User, Mail, Calendar, Shield } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 
@@ -62,21 +63,31 @@ export default function ProfilePage() {
     return null
   }
 
+  // Get user data from Supabase user object
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Gebruiker'
+  const userEmail = user.email || ''
+  const userCreatedAt = user.created_at || new Date().toISOString()
+  const avatarUrl = user.user_metadata?.avatar_url
+
   return (
-    <div className="container py-12">
-      <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="container py-12 max-w-6xl mx-auto">
+      <div className="space-y-8">
+        {/* Profile Avatar Editor */}
+        <ProfileAvatarEditor />
+
         {/* Profile Header */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarUrl} alt={userName} />
                 <AvatarFallback className="text-2xl">
-                  {user.name.substring(0, 2).toUpperCase()}
+                  {userName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-2">
-                <CardTitle className="text-3xl">{user.name}</CardTitle>
-                <CardDescription className="text-base">@{user.username}</CardDescription>
+                <CardTitle className="text-3xl">{userName}</CardTitle>
+                <CardDescription className="text-base">@{userEmail.split('@')[0]}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -87,21 +98,21 @@ export default function ProfilePage() {
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="text-sm text-muted-foreground">E-mail</div>
-                  <div className="font-medium">{user.email}</div>
+                  <div className="font-medium">{userEmail}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="text-sm text-muted-foreground">Lid sinds</div>
-                  <div className="font-medium">{formatDate(user.created_at)}</div>
+                  <div className="font-medium">{formatDate(userCreatedAt)}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="text-sm text-muted-foreground">Rol</div>
-                  <div className="font-medium capitalize">{user.role}</div>
+                  <div className="font-medium capitalize">{user.user_metadata?.role || 'user'}</div>
                 </div>
               </div>
             </div>

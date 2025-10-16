@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { uploadImage } from "@/lib/image-upload"
 
 export default function NewRecipePage() {
   const router = useRouter()
@@ -23,10 +24,29 @@ export default function NewRecipePage() {
     }
   }, [user, loading, router])
 
-  const handleSubmit = async (data: Partial<Recipe>) => {
+  const handleSubmit = async (data: Partial<Recipe>, imageFile?: File | null) => {
     setIsSubmitting(true)
     try {
-      const newRecipe = await recipeAPI.create(data)
+      let image_url: string | undefined = undefined
+
+      // Upload image if provided
+      if (imageFile && user) {
+        try {
+          image_url = await uploadImage(imageFile, "recipe-images", user.id)
+        } catch (error: any) {
+          toast({
+            variant: "destructive",
+            title: "Fout bij uploaden afbeelding",
+            description: error.message,
+          })
+          // Continue without image
+        }
+      }
+
+      const newRecipe = await recipeAPI.create({
+        ...data,
+        image_url,
+      })
       toast({
         title: "Recept aangemaakt!",
         description: "Je recept is succesvol toegevoegd.",
@@ -45,7 +65,7 @@ export default function NewRecipePage() {
 
   if (loading) {
     return (
-      <div className="container py-12 max-w-4xl">
+      <div className="container py-12 max-w-4xl mx-auto">
         <div className="text-center">Laden...</div>
       </div>
     )
@@ -56,7 +76,7 @@ export default function NewRecipePage() {
   }
 
   return (
-    <div className="container py-12 max-w-4xl">
+    <div className="container py-12 max-w-4xl mx-auto">
       <Button variant="ghost" asChild className="mb-6">
         <Link href="/recepten">
           <ArrowLeft className="mr-2 h-4 w-4" />

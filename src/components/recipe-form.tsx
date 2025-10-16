@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Plus, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ImageUpload } from "@/components/image-upload"
 
 const recipeSchema = z.object({
   name: z.string().min(3, "Naam moet minimaal 3 karakters bevatten"),
@@ -33,7 +35,7 @@ type RecipeFormData = z.infer<typeof recipeSchema>
 
 interface RecipeFormProps {
   recipe?: Recipe
-  onSubmit: (data: Partial<Recipe>) => Promise<void>
+  onSubmit: (data: Partial<Recipe>, imageFile?: File | null) => Promise<void>
   isSubmitting?: boolean
 }
 
@@ -47,6 +49,8 @@ const mealTypeOptions = [
 ]
 
 export function RecipeForm({ recipe, onSubmit, isSubmitting }: RecipeFormProps) {
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  
   const {
     register,
     handleSubmit,
@@ -89,11 +93,26 @@ export function RecipeForm({ recipe, onSubmit, isSubmitting }: RecipeFormProps) 
   const mealType = watch("meal_type")
 
   const handleFormSubmit = async (data: RecipeFormData) => {
-    await onSubmit(data)
+    await onSubmit(data, imageFile)
   }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      {/* Image Upload */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recept Foto</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ImageUpload
+            currentImage={recipe?.image_url}
+            onImageChange={setImageFile}
+            label="Recept afbeelding"
+            description="Upload een foto van je gerecht (optioneel, max 5MB)"
+          />
+        </CardContent>
+      </Card>
+
       {/* Basic Info */}
       <Card>
         <CardHeader>

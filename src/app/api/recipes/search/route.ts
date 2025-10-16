@@ -20,13 +20,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     );
     const offset = (page - 1) * limit;
 
-    // Build the query conditionally
+    // Build the query conditionally with owner info
     let query = `
       SELECT r.*, 
         array_agg(DISTINCT ri.ingredient) as ingredients,
-        COUNT(*) OVER() as total_count
+        COUNT(*) OVER() as total_count,
+        u.raw_user_meta_data->>'name' as owner_name,
+        u.raw_user_meta_data->>'avatar_url' as owner_avatar
       FROM recipes r
       LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+      LEFT JOIN auth.users u ON r.owner_id = u.id
     `;
 
     const queryParams: (string | number)[] = [];
@@ -55,7 +58,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     // Group by recipe fields to handle the array_agg
     query += `
-      GROUP BY r.id
+      GROUP BY r.id, u.raw_user_meta_data
       ORDER BY r.created_at DESC
       LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
     `;
@@ -94,8 +97,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       cooking_time: row.cooking_time,
       servings: row.servings,
       instructions: row.instructions,
+      image_url: row.image_url,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      owner_name: row.owner_name,
+      owner_avatar: row.owner_avatar,
     }));
 
     return NextResponse.json({

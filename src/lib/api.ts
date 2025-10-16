@@ -1,14 +1,5 @@
 import { Recipe, RecipeSearchParams } from "@/types/recipe"
-import { UserResponse, LoginInput, UserCreateInput } from "@/types/user"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
-
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: Record<string, string>
-}
+import { supabase } from "./supabase"
 
 class ApiError extends Error {
   constructor(
@@ -21,66 +12,7 @@ class ApiError extends Error {
   }
 }
 
-async function fetchAPI<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    credentials: "include",
-  })
-
-  const data: ApiResponse<T> = await response.json()
-
-  if (!response.ok || !data.success) {
-    throw new ApiError(
-      response.status,
-      data.message || "Er is iets misgegaan",
-      data.errors
-    )
-  }
-
-  return data.data as T
-}
-
-// Auth API
-export const authAPI = {
-  async login(credentials: LoginInput): Promise<{ user: UserResponse }> {
-    return fetchAPI("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(credentials),
-    })
-  },
-
-  async signup(userData: UserCreateInput): Promise<{ user: UserResponse }> {
-    return fetchAPI("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    })
-  },
-
-  async logout(): Promise<void> {
-    return fetchAPI("/api/auth/logout", {
-      method: "POST",
-    })
-  },
-
-  async me(): Promise<{ user: UserResponse }> {
-    return fetchAPI("/api/auth/me")
-  },
-
-  async refresh(): Promise<{ user: UserResponse }> {
-    return fetchAPI("/api/auth/refresh", {
-      method: "POST",
-    })
-  },
-}
-
-// Recipe API
+// Recipe API met Supabase
 export const recipeAPI = {
   async search(params: RecipeSearchParams): Promise<{
     recipes: Recipe[]
@@ -88,57 +20,99 @@ export const recipeAPI = {
     page: number
     limit: number
   }> {
-    const searchParams = new URLSearchParams()
-    if (params.ingredients) searchParams.set("ingredients", params.ingredients)
-    if (params.meal_type) searchParams.set("meal_type", params.meal_type)
-    if (params.page) searchParams.set("page", params.page.toString())
-    if (params.limit) searchParams.set("limit", params.limit.toString())
+    const page = params.page || 1
+    const limit = params.limit || 10
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-    return fetchAPI(`/api/recipes/search?${searchParams.toString()}`)
+    let query = supabase!
+      .from('recipes')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    // Filter op ingrediënten
+    if (params.ingredients) {
+      query = query.contains('ingredients', [params.ingredients])
+    }
+
+    // Filter op meal type
+    if (params.meal_type) {
+      query = query.eq('meal_type', params.meal_type)
+    }
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new ApiError(500, error.message)
+    }
+
+    return {
+      recipes: (data || []) as Recipe[],
+      total: count || 0,
+      page,
+      limit,
+    }
   },
 
   async getById(id: string): Promise<Recipe> {
-    return fetchAPI(`/api/recipes/${id}`)
+    const response = await fetch(`/api/recipes/${id}`)
+    const json = await response.json()
+
+    if (!response.ok || !json.success) {
+      throw new ApiError(response.status, json.message || 'Recept niet gevonden')
+    }
+
+    return json.data as Recipe
   },
 
   async create(recipe: Partial<Recipe>): Promise<Recipe> {
-    return fetchAPI("/api/recipes", {
-      method: "POST",
-      body: JSON.stringify(recipe),
-    })
+    const { data: { user } } = await supabase!.auth.getUser()
+    
+    if (!user) {
+      throw new ApiError(401, 'Je moet ingelogd zijn')
+    }
+
+    const { data, error } = await supabase!
+      .from('recipes')
+      .insert({
+        ...recipe,
+        owner_id: user.id,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw new ApiError(500, error.message)
+    }
+
+    return data as Recipe
   },
 
   async update(id: string, recipe: Partial<Recipe>): Promise<Recipe> {
-    return fetchAPI(`/api/recipes/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(recipe),
-    })
+    const { data, error } = await supabase!
+      .from('recipes')
+      .update(recipe)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      throw new ApiError(500, error.message)
+    }
+
+    return data as Recipe
   },
 
   async delete(id: string): Promise<void> {
-    return fetchAPI(`/api/recipes/${id}`, {
-      method: "DELETE",
-    })
-  },
-}
+    const { error } = await supabase!
+      .from('recipes')
+      .delete()
+      .eq('id', id)
 
-// User/Admin API
-export const userAPI = {
-  async getAllUsers(): Promise<UserResponse[]> {
-    return fetchAPI("/api/admin/users")
-  },
-
-  async updateUser(id: number, data: Partial<UserResponse>): Promise<UserResponse> {
-    return fetchAPI(`/api/admin/users/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
-  },
-
-  async deleteUser(id: number): Promise<void> {
-    return fetchAPI(`/api/admin/users/${id}`, {
-      method: "DELETE",
-    })
+    if (error) {
+      throw new ApiError(500, error.message)
+    }
   },
 }
 

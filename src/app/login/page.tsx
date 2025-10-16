@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { authAPI } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,8 +24,15 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const { toast } = useToast()
+
+  // Redirect als al ingelogd
+  useEffect(() => {
+    if (user) {
+      router.push("/recepten")
+    }
+  }, [user, router])
 
   const {
     register,
@@ -39,13 +45,12 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const response = await authAPI.login(data)
-      login(response.user)
+      await login(data.email, data.password)
       toast({
         title: "Welkom terug!",
         description: "Je bent succesvol ingelogd.",
       })
-      router.push("/recepten")
+      router.push("/recepten") // Dashboard redirect
     } catch (error: any) {
       toast({
         variant: "destructive",

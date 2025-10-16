@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { authAPI } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,10 +15,9 @@ import { useToast } from "@/hooks/use-toast"
 import { ChefHat } from "lucide-react"
 
 const signupSchema = z.object({
-  name: z.string().min(2, "Naam moet minimaal 2 karakters bevatten"),
+  name: z.string().min(2, "Naam moet minimaal 2 tekens bevatten"),
   email: z.string().email("Ongeldig e-mailadres"),
-  username: z.string().min(3, "Gebruikersnaam moet minimaal 3 karakters bevatten").optional().or(z.literal("")),
-  password: z.string().min(8, "Wachtwoord moet minimaal 8 karakters bevatten"),
+  password: z.string().min(8, "Wachtwoord moet minimaal 8 tekens bevatten"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Wachtwoorden komen niet overeen",
@@ -31,8 +29,15 @@ type SignupFormData = z.infer<typeof signupSchema>
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login } = useAuth()
+  const { signup, user } = useAuth()
   const { toast } = useToast()
+
+  // Redirect als al ingelogd
+  useEffect(() => {
+    if (user) {
+      router.push("/recepten")
+    }
+  }, [user, router])
 
   const {
     register,
@@ -45,19 +50,17 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
     try {
-      const { confirmPassword, ...signupData } = data
-      const response = await authAPI.signup(signupData)
-      login(response.user)
+      await signup(data.email, data.password, data.name)
       toast({
         title: "Account aangemaakt!",
-        description: "Welkom bij Stop de Ontkoking!",
+        description: "Check je email voor de verificatie link en log daarna in.",
       })
-      router.push("/recepten")
+      router.push("/login")
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Registratie mislukt",
-        description: error.message || "Er is iets misgegaan. Probeer het opnieuw.",
+        description: error.message || "Er ging iets mis. Probeer het opnieuw.",
       })
     } finally {
       setIsLoading(false)
@@ -73,9 +76,9 @@ export default function SignupPage() {
               <ChefHat className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Maak een account aan</CardTitle>
+          <CardTitle className="text-2xl text-center">Account aanmaken</CardTitle>
           <CardDescription className="text-center">
-            Begin met het delen en ontdekken van recepten
+            Maak een account aan om recepten te delen
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -84,7 +87,7 @@ export default function SignupPage() {
               <Label htmlFor="name">Naam</Label>
               <Input
                 id="name"
-                placeholder="John Doe"
+                placeholder="Jan Jansen"
                 {...register("name")}
                 disabled={isLoading}
               />
@@ -103,18 +106,6 @@ export default function SignupPage() {
               />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Gebruikersnaam (optioneel)</Label>
-              <Input
-                id="username"
-                placeholder="johndoe"
-                {...register("username")}
-                disabled={isLoading}
-              />
-              {errors.username && (
-                <p className="text-sm text-destructive">{errors.username.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -146,7 +137,7 @@ export default function SignupPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Bezig met registreren..." : "Registreren"}
+              {isLoading ? "Bezig met aanmaken..." : "Account aanmaken"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Al een account?{" "}
