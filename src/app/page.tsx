@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChefHat, Search, Heart, Star, Clock, Users, Filter, ChevronRight, Flame, Leaf, Target } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -296,6 +297,23 @@ export default function LandingPage() {
                           </h3>
 
                           <div className="space-y-3">
+                            {/* Owner Info */}
+                            {recipe.owner_name && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <Avatar className="h-6 w-6">
+                                  {recipe.owner_avatar && (
+                                    <AvatarImage src={recipe.owner_avatar} alt={recipe.owner_name} />
+                                  )}
+                                  <AvatarFallback className="text-xs" style={{ backgroundColor: "#f0fdf4", color: "#84cc16" }}>
+                                    {recipe.owner_name.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs font-medium" style={{ color: "#78716c" }}>
+                                  {recipe.owner_name}
+                                </span>
+                              </div>
+                            )}
+
                             {/* Description */}
                             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                               {recipe.description}
