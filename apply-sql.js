@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env npm run ts-node
 
 import { exec } from "child_process";
 import { promisify } from "util";
