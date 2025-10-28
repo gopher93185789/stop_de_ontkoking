@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { userAPI, recipeAPI } from "@/lib/api"
+import { recipeAPI } from "@/lib/api"
 import { UserResponse } from "@/types/user"
 import { Recipe } from "@/types/recipe"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,11 +52,7 @@ export default function AdminPage() {
       if (!isAdmin) return
 
       try {
-        const [usersData, recipesData] = await Promise.all([
-          userAPI.getAllUsers(),
-          recipeAPI.search({ limit: 100 }),
-        ])
-        setUsers(usersData)
+        const recipesData = await recipeAPI.search({ limit: 100 })
         setRecipes(recipesData.recipes)
       } catch (error) {
         toast({
@@ -74,28 +70,7 @@ export default function AdminPage() {
     }
   }, [isAdmin, authLoading])
 
-  const handleDeleteUser = async () => {
-    if (!deleteUserDialog.user) return
 
-    setIsDeleting(true)
-    try {
-      await userAPI.deleteUser(deleteUserDialog.user.id)
-      setUsers(users.filter((u) => u.id !== deleteUserDialog.user!.id))
-      toast({
-        title: "Gebruiker verwijderd",
-        description: "De gebruiker is succesvol verwijderd.",
-      })
-      setDeleteUserDialog({ open: false, user: null })
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Fout bij verwijderen",
-        description: "De gebruiker kon niet worden verwijderd.",
-      })
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   const handleDeleteRecipe = async () => {
     if (!deleteRecipeDialog.recipe) return
@@ -175,48 +150,6 @@ export default function AdminPage() {
           </Card>
         </div>
 
-        {/* Users Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gebruikers Beheer</CardTitle>
-            <CardDescription>Bekijk en beheer alle gebruikers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.map((u) => (
-                <div key={u.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarFallback>
-                        {u.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{u.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {u.email} • @{u.username}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Lid sinds {formatDate(u.created_at)}
-                      </div>
-                    </div>
-                    <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                      {u.role}
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setDeleteUserDialog({ open: true, user: u })}
-                    disabled={u.id === user.id}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Recipes Management */}
         <Card>
@@ -268,32 +201,6 @@ export default function AdminPage() {
         </Card>
       </div>
 
-      {/* Delete User Dialog */}
-      <Dialog
-        open={deleteUserDialog.open}
-        onOpenChange={(open) => setDeleteUserDialog({ open, user: null })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Gebruiker verwijderen?</DialogTitle>
-            <DialogDescription>
-              Weet je zeker dat je {deleteUserDialog.user?.name} wilt verwijderen? Deze actie kan
-              niet ongedaan worden gemaakt.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteUserDialog({ open: false, user: null })}
-            >
-              Annuleren
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteUser} disabled={isDeleting}>
-              {isDeleting ? "Bezig met verwijderen..." : "Verwijderen"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Recipe Dialog */}
       <Dialog
