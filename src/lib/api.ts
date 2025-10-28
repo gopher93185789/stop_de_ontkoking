@@ -47,8 +47,15 @@ export const recipeAPI = {
       throw new ApiError(500, error.message)
     }
 
+    // For now, owner info is not fetched due to Supabase auth.users join restrictions
+    const recipes = (data || []).map((item: any) => ({
+      ...item,
+      owner_name: undefined,
+      owner_avatar: undefined,
+    }))
+
     return {
-      recipes: (data || []) as Recipe[],
+      recipes,
       total: count || 0,
       page,
       limit,
@@ -78,6 +85,8 @@ export const recipeAPI = {
       .insert({
         ...recipe,
         owner_id: user.id,
+        owner_name: user.user_metadata?.name,
+        owner_avatar: user.user_metadata?.avatar_url,
       })
       .select()
       .single()

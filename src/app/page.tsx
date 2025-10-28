@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ChefHat, Search, Heart, Star, Clock, Users, Filter, ChevronRight, Flame, Leaf, Target } from "lucide-react"
+import { ChefHat, Search, Heart, Star, Clock, Users, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -71,13 +71,6 @@ export default function LandingPage() {
     }
   }
 
-  const filters = {
-    diet: ["Dairy Free", "Egg Free", "Sugar Free", "Gluten Free"],
-    allergies: ["Gluten", "Peanuts", "Shellfish", "Grain", "Fruits"],
-    cuisine: ["Asian", "Italian", "Chinese", "Thai"],
-    goals: ["Weight loss", "Freshness", "Activeness", "Rich Nutrition"]
-  }
-
   return (
     <div className="flex flex-col w-full min-h-screen" style={{ backgroundColor: "#fafaf9" }}>
       {/* Hero Section with Featured Recipe */}
@@ -90,7 +83,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 flex items-center justify-start z-20 px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
               <div className="inline-block mb-4" style={{ backgroundColor: "#84cc16", paddingLeft: "1rem", paddingRight: "1rem", paddingTop: "0.25rem", paddingBottom: "0.25rem", borderRadius: "9999px", color: "white", fontSize: "0.875rem", fontWeight: "500" }}>
-                Featured Recipe
+                Trending
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
                 Meat <br className="hidden md:block" />Chicken
@@ -109,72 +102,6 @@ export default function LandingPage() {
       <section className="py-16 md:py-32 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar Filters */}
-            <aside className="w-full lg:w-64 flex-shrink-0">
-              <div className="rounded-lg p-6 md:p-8 sticky top-20" style={{ backgroundColor: "white", border: "1px solid #e7e5e4" }}>
-                <div className="flex items-center gap-2 mb-6 pb-4" style={{ borderBottomColor: "#e7e5e4", borderBottomWidth: "1px" }}>
-                  <Filter className="h-5 w-5" style={{ color: "#84cc16" }} />
-                  <h2 className="text-lg font-bold" style={{ color: "#1c1917" }}>Filter Recipes</h2>
-                </div>
-
-                {/* Diet Filter */}
-                <div className="mb-8">
-                  <h3 className="font-semibold text-sm mb-3" style={{ color: "#84cc16" }}>Diet</h3>
-                  <div className="space-y-2">
-                    {filters.diet.map((item) => (
-                      <label key={item} className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor: "#10b981" }} />
-                        <span className="text-sm transition-colors" style={{ color: "#57534e" }}>{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Allergies Filter */}
-                <div className="mb-8">
-                  <h3 className="font-semibold text-sm mb-3" style={{ color: "#84cc16" }}>Allergies</h3>
-                  <div className="space-y-2">
-                    {filters.allergies.map((item) => (
-                      <label key={item} className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor: "#10b981" }} />
-                        <span className="text-sm transition-colors" style={{ color: "#57534e" }}>{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Cuisine Filter */}
-                <div className="mb-8">
-                  <h3 className="font-semibold text-sm mb-3" style={{ color: "#84cc16" }}>Cuisine</h3>
-                  <div className="space-y-2">
-                    {filters.cuisine.map((item) => (
-                      <label key={item} className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor: "#10b981" }} />
-                        <span className="text-sm transition-colors" style={{ color: "#57534e" }}>{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Goals Filter */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-sm mb-3" style={{ color: "#84cc16" }}>Goals</h3>
-                  <div className="space-y-2">
-                    {filters.goals.map((item) => (
-                      <label key={item} className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 rounded" style={{ accentColor: "#10b981" }} />
-                        <span className="text-sm transition-colors" style={{ color: "#57534e" }}>{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <Button className="w-full transition-all duration-300 hover:scale-105" style={{ backgroundColor: "transparent", color: "#84cc16", border: "2px solid #84cc16" }}>
-                  Clear Filters
-                </Button>
-              </div>
-            </aside>
-
             {/* Recipe Grid */}
             <div className="flex-1">
               {/* Header */}
@@ -309,7 +236,7 @@ export default function LandingPage() {
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="text-xs font-medium" style={{ color: "#78716c" }}>
-                                  {recipe.owner_name}
+                                  Posted by: {recipe.owner_name}
                                 </span>
                               </div>
                             )}

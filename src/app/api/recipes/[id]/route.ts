@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 
 /**
  * GET handler for /api/recipes/[id] endpoint
@@ -7,27 +7,18 @@ import db from "@/lib/db";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
-    // Query the recipe with owner info
-    const query = `
-      SELECT r.*, 
-        array_agg(DISTINCT ri.ingredient) FILTER (WHERE ri.ingredient IS NOT NULL) as ingredients,
-        u.raw_user_meta_data->>'name' as owner_name,
-        u.raw_user_meta_data->>'avatar_url' as owner_avatar
-      FROM recipes r
-      LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id
-      LEFT JOIN auth.users u ON r.owner_id = u.id
-      WHERE r.id = $1
-      GROUP BY r.id, u.raw_user_meta_data
-    `;
+    const { data, error } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    const result = await db.query(query, [id]);
-
-    if (result.rows.length === 0) {
+    if (error || !data) {
       return NextResponse.json(
         {
           success: false,
@@ -37,23 +28,34 @@ export async function GET(
       );
     }
 
-    const row = result.rows[0];
+    // Fetch owner info separately
+    let owner_name: string | undefined;
+    let owner_avatar: string | undefined;
+    // Temporarily disabled due to auth restrictions
+    // if (data.owner_id) {
+    //   const { data: userData } = await supabase.auth.admin.getUserById(data.owner_id);
+    //   if (userData.user?.user_metadata) {
+    //     owner_name = userData.user.user_metadata.name;
+    //     owner_avatar = userData.user.user_metadata.avatar_url;
+    //   }
+    // }
+
     const recipe = {
-      id: row.id,
-      owner_id: row.owner_id,
-      name: row.name,
-      description: row.description,
-      ingredients: row.ingredients || [],
-      meal_type: row.meal_type,
-      preparation_time: row.preparation_time,
-      cooking_time: row.cooking_time,
-      servings: row.servings,
-      instructions: row.instructions,
-      image_url: row.image_url,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      owner_name: row.owner_name,
-      owner_avatar: row.owner_avatar,
+      id: data.id,
+      owner_id: data.owner_id,
+      name: data.name,
+      description: data.description,
+      ingredients: data.ingredients || [],
+      meal_type: data.meal_type,
+      preparation_time: data.preparation_time,
+      cooking_time: data.cooking_time,
+      servings: data.servings,
+      instructions: data.instructions,
+      image_url: data.image_url,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      owner_name,
+      owner_avatar,
     };
 
     return NextResponse.json({
