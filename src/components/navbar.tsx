@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut, User, Menu, X, Moon, Sun, Home, BookOpen, Plus, Settings, ChefHat } from "lucide-react"
+import { LogOut, User, Menu, X, Home, BookOpen, Plus, Settings, ChefHat } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -19,25 +19,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<"light" | "dark">("light")
   const { user, logout, isAdmin } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null
-    if (savedTheme) {
-      setTheme(savedTheme)
-      document.documentElement.classList.toggle("dark", savedTheme === "dark")
-    }
-  }, [])
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light"
-    setTheme(newTheme)
-    localStorage.setItem("theme", newTheme)
-    document.documentElement.classList.toggle("dark", newTheme === "dark")
-  }
+  // Theme toggling removed to enforce light-only UI
 
   const handleLogout = async () => {
     await logout()
@@ -53,8 +38,8 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b transition-colors duration-300" style={{ 
-      backgroundColor: theme === "dark" ? "#1f2937" : "white",
-      borderBottomColor: theme === "dark" ? "#374151" : "#e5e7eb"
+      backgroundColor: "white",
+      borderBottomColor: "#e5e7eb"
     }}>
       <div className="w-full flex h-16 items-center justify-center px-4">
         <div className="w-full max-w-7xl flex items-center justify-between">
@@ -62,8 +47,8 @@ export function Navbar() {
             <Link href="/" className="flex items-center gap-2">
               <Image 
               src="/sdologo.svg" 
-              height={"75"}
-              width={"75"}
+              height={"70"}
+              width={"70"}
               alt="Logo" 
               className="font-bold text-lg hidden sm:inline-block"
               />
@@ -78,12 +63,10 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                      isActive 
-                        ? "text-lime-500" 
-                        : theme === "dark" 
-                          ? "text-gray-400 hover:text-lime-500" 
-                          : "text-gray-600 hover:text-lime-500"
-                    }`}
+                          isActive 
+                            ? "text-lime-500" 
+                            : "text-gray-600 hover:text-lime-500"
+                        }`}
                   >
                     <Icon className="h-4 w-4" />
                     {link.label}
@@ -94,19 +77,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme} 
-              className="shrink-0"
-              style={{ color: theme === "dark" ? "white" : "#1f2937" }}
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </Button>
+            {/* Theme toggle removed - site uses light theme only */}
 
             {user ? (
               <DropdownMenu>
@@ -124,7 +95,7 @@ export function Navbar() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white dark:bg-gray-800" align="end" forceMount>
+                <DropdownMenuContent className="w-56 bg-white" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
@@ -193,8 +164,8 @@ export function Navbar() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t transition-colors duration-300" style={{ 
-          backgroundColor: theme === "dark" ? "#1f2937" : "white",
-          borderTopColor: theme === "dark" ? "#374151" : "#e5e7eb"
+          backgroundColor: "white",
+          borderTopColor: "#e5e7eb"
         }}>
           <div className="flex items-center justify-center px-4">
             <div className="w-full max-w-7xl py-4 space-y-3">
@@ -209,9 +180,7 @@ export function Navbar() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                       isActive
                         ? "bg-green-100 text-green-600"
-                        : theme === "dark"
-                          ? "text-gray-300 hover:bg-gray-700"
-                          : "text-gray-600 hover:bg-gray-100"
+                        : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -225,9 +194,7 @@ export function Navbar() {
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                      theme === "dark"
-                        ? "text-gray-300 hover:bg-gray-700"
-                        : "text-gray-600 hover:bg-gray-100"
+                      "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     Inloggen

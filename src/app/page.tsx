@@ -76,24 +76,22 @@ export default function LandingPage() {
       {/* Hero Section with Featured Recipe */}
       <section className="relative overflow-hidden w-full">
         {/* Featured Recipe Banner */}
-        <div className="relative h-96 md:h-[500px] overflow-hidden bg-cover bg-center" style={{ backgroundImage: "url('/hero.jpg')" }}>
+        <div className="relative h-96 md:h-[500px] overflow-hidden bg-black">
+          {/* Background video (autoplay muted loop). Poster provides a fallback image. */}
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/bannervid.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/hero.jpg"
+            aria-hidden="true"
+          />
           <div className="absolute inset-0 bg-black/30 z-10"></div>
 
           {/* Featured Content */}
           <div className="absolute inset-0 flex items-center justify-start z-20 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
-              <div className="inline-block mb-4" style={{ backgroundColor: "#84cc16", paddingLeft: "1rem", paddingRight: "1rem", paddingTop: "0.25rem", paddingBottom: "0.25rem", borderRadius: "9999px", color: "white", fontSize: "0.875rem", fontWeight: "500" }}>
-                Trending
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                Meat <br className="hidden md:block" />Chicken
-              </h1>
-              <Button asChild size="lg" className="px-8 h-14 text-base font-semibold transition-all duration-300 hover:scale-105" style={{ backgroundColor: "white", color: "#1c1917" }} onClick={handleRecipeClick}>
-                <Link href={user ? "/recepten" : "/login"}>
-                  More <ChevronRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </section>
