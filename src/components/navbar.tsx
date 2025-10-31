@@ -113,6 +113,12 @@ export function Navbar() {
                       <span>Profiel</span>
                     </Link>
                   </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                    <Link href="/liked">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Liked</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/recepten">
                       <ChefHat className="mr-2 h-4 w-4" />

@@ -257,12 +257,14 @@ export default function LandingPage() {
                             </div>
 
                             {/* Meta */}
-                            <div className="flex items-center justify-between pt-2" style={{ borderTopColor: "#e7e5e4", borderTopWidth: "1px" }}>
+                              <div onClick= {() => {}} className="flex items-center justify-between pt-2"  style={{ borderTopColor: "#e7e5e4", borderTopWidth: "1px" }}>
                               <span className="text-xs font-medium px-3 py-1 rounded" style={{ color: "#84cc16", backgroundColor: "#f0fdf4" }}>
                                 {recipe.ingredients?.length || 0} ingrediënten
                               </span>
                               <Heart className="h-4 w-4 transition-all hover:fill-red-500 hover:text-red-500" style={{ color: "#e7e5e4" }} />
                             </div>
+
+  
                           </div>
                         </div>
                       </Card>
