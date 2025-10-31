@@ -24,6 +24,13 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- hierin gaan alle use rliked recvipes kkkr kut 9
+CREATE TABLE IF NOT EXISTS users_liked_recipes (
+    user_id UUID REFERENCES users(id),
+    recipe_id UUID REFERENCES recipes(id),
+    PRIMARY KEY(user_id, recipe_id)
+);
+
 -- Create index on email for faster lookups
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 

@@ -17,6 +17,10 @@ export interface Recipe {
   owner_avatar?: string;
 }
 
+export interface UserLikedRecipeIds {
+  recipe_id: string;
+}
+
 export type MealType =
   | "breakfast"
   | "lunch"

@@ -1,5 +1,5 @@
-import { Recipe, RecipeSearchParams } from "@/types/recipe"
-import { supabase } from "./supabase"
+import { Recipe, RecipeSearchParams,} from "@/types/recipe";
+import { supabase } from "./supabase";
 
 class ApiError extends Error {
   constructor(
@@ -7,44 +7,44 @@ class ApiError extends Error {
     message: string,
     public errors?: Record<string, string>
   ) {
-    super(message)
-    this.name = "ApiError"
+    super(message);
+    this.name = "ApiError";
   }
 }
 
 // Recipe API met Supabase
 export const recipeAPI = {
   async search(params: RecipeSearchParams): Promise<{
-    recipes: Recipe[]
-    total: number
-    page: number
-    limit: number
+    recipes: Recipe[];
+    total: number;
+    page: number;
+    limit: number;
   }> {
-    const page = params.page || 1
-    const limit = params.limit || 10
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    const page = params.page || 1;
+    const limit = params.limit || 10;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
     let query = supabase!
-      .from('recipes')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to)
+      .from("recipes")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     // Filter op ingrediënten
     if (params.ingredients) {
-      query = query.contains('ingredients', [params.ingredients])
+      query = query.contains("ingredients", [params.ingredients]);
     }
 
     // Filter op meal type
     if (params.meal_type) {
-      query = query.eq('meal_type', params.meal_type)
+      query = query.eq("meal_type", params.meal_type);
     }
 
-    const { data, error, count } = await query
+    const { data, error, count } = await query;
 
     if (error) {
-      throw new ApiError(500, error.message)
+      throw new ApiError(500, error.message);
     }
 
     // For now, owner info is not fetched due to Supabase auth.users join restrictions
@@ -52,36 +52,41 @@ export const recipeAPI = {
       ...item,
       owner_name: undefined,
       owner_avatar: undefined,
-    }))
+    }));
 
     return {
       recipes,
       total: count || 0,
       page,
       limit,
-    }
+    };
   },
 
   async getById(id: string): Promise<Recipe> {
-    const response = await fetch(`/api/recipes/${id}`)
-    const json = await response.json()
+    const response = await fetch(`/api/recipes/${id}`);
+    const json = await response.json();
 
     if (!response.ok || !json.success) {
-      throw new ApiError(response.status, json.message || 'Recept niet gevonden')
+      throw new ApiError(
+        response.status,
+        json.message || "Recept niet gevonden"
+      );
     }
 
-    return json.data as Recipe
+    return json.data as Recipe;
   },
 
   async create(recipe: Partial<Recipe>): Promise<Recipe> {
-    const { data: { user } } = await supabase!.auth.getUser()
-    
+    const {
+      data: { user },
+    } = await supabase!.auth.getUser();
+
     if (!user) {
-      throw new ApiError(401, 'Je moet ingelogd zijn')
+      throw new ApiError(401, "Je moet ingelogd zijn");
     }
 
     const { data, error } = await supabase!
-      .from('recipes')
+      .from("recipes")
       .insert({
         ...recipe,
         owner_id: user.id,
@@ -89,40 +94,62 @@ export const recipeAPI = {
         owner_avatar: user.user_metadata?.avatar_url,
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new ApiError(500, error.message)
+      throw new ApiError(500, error.message);
     }
 
-    return data as Recipe
+    return data as Recipe;
   },
 
   async update(id: string, recipe: Partial<Recipe>): Promise<Recipe> {
     const { data, error } = await supabase!
-      .from('recipes')
+      .from("recipes")
       .update(recipe)
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new ApiError(500, error.message)
+      throw new ApiError(500, error.message);
     }
 
-    return data as Recipe
+    return data as Recipe;
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase!
-      .from('recipes')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase!.from("recipes").delete().eq("id", id);
 
     if (error) {
-      throw new ApiError(500, error.message)
+      throw new ApiError(500, error.message);
     }
   },
-}
 
-export { ApiError }
+  async AddtoLikedRecipes(userID: string, recipeID: string[]): Promise<number> {
+    const { error } = await supabase
+      .from("users_liked_recipes")
+      .insert(recipeID.map((id) => ({ user_id: userID, recipe_id: id })));
+
+    if (error) {
+      console.error("Error inserting likes:", error);
+    }
+
+    return 200;
+  },
+
+  async GetLikedRecipes(userID: string): Promise<string[]> {
+    const { data, error } = await supabase!
+      .from("users_liked_recipes")
+      .select("recipe_id")
+      .eq("user_id", userID);
+
+    if (error) {
+      throw new ApiError(500, error.message);
+    }
+
+    return data?.map((item) => item.recipe_id) ?? [];
+  },
+};
+
+export { ApiError };
