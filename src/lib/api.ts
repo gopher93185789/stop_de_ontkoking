@@ -123,6 +123,25 @@ export const recipeAPI = {
       throw new ApiError(500, error.message)
     }
   },
+
+  async getLikedRecipes(): Promise<Recipe[]> {
+    const { data: { user } } = await supabase!.auth.getUser()
+    
+    if (!user) {
+      return []
+    }
+    
+    const { data, error } = await supabase!
+      .from('users_liked_recipes')
+      .select('recipe_id, recipes(*)')
+      .eq('user_id', user.id)
+    
+    if (error) {
+      throw new ApiError(500, error.message)
+    }
+    
+    return (data?.map((item: any) => item.recipes).filter(Boolean) || []) as Recipe[]
+  },
 }
 
 export { ApiError }
