@@ -19,32 +19,6 @@ export function Footer() {
                 Het moderne digitale kookplatform waar je recepten deelt, ontdekt en opslaat. 
                 Sluit je aan bij onze groeiende community!
               </p>
-              <div className="flex items-center gap-3 pt-2">
-                <Link 
-                  href="#" 
-                  className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <Instagram className="h-4 w-4" />
-                </Link>
-                <Link 
-                  href="#" 
-                  className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <Twitter className="h-4 w-4" />
-                </Link>
-                <Link 
-                  href="#" 
-                  className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <Facebook className="h-4 w-4" />
-                </Link>
-                <Link 
-                  href="#" 
-                  className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <Mail className="h-4 w-4" />
-                </Link>
-              </div>
             </div>
 
             <div>
@@ -115,11 +89,6 @@ export function Footer() {
                 <li>
                   <Link href="#" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center group">
                     <span className="group-hover:translate-x-1 transition-transform">Cookie Policy</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center group">
-                    <span className="group-hover:translate-x-1 transition-transform">Licenties</span>
                   </Link>
                 </li>
               </ul>
