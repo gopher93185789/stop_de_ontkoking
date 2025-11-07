@@ -117,7 +117,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/liked">
                       <Heart className="mr-2 h-4 w-4" />
-                      <span>Gelikte Recepten</span>
+                      <span>Gelikede Recepten</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
