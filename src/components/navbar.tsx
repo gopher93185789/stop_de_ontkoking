@@ -32,7 +32,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/recepten", label: "Recepten", icon: BookOpen },
-    ...(user ? [{ href: "/liked", label: "Gelikte Recepten", icon: Heart }] : []),
+    ...(user ? [{ href: "/liked", label: "Gelikede Recepten", icon: Heart }] : []),
     ...(user ? [{ href: "/recepten/nieuw", label: "Nieuw Recept", icon: Plus }] : []),
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Settings }] : []),
   ]

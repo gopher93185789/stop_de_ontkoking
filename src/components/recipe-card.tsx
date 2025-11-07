@@ -67,7 +67,7 @@ export function RecipeCard({ recipe, isLiked = false, onLikeToggle }: RecipeCard
       toast({
         title: newIsLiked ? "Recept geliked!" : "Like verwijderd",
         description: newIsLiked
-          ? "Je kunt dit recept terugvinden bij je gelikte recepten."
+          ? "Je kunt dit recept terugvinden bij je gelikede recepten."
           : "Het recept is verwijderd uit je likes.",
       })
     } catch (error) {
