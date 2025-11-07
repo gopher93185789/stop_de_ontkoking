@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 /**
  * GET handler for /api/recipes/[id] endpoint
  * Get a single recipe by ID with owner information
+ * shshhs
  */
 export async function GET(
   req: NextRequest,
