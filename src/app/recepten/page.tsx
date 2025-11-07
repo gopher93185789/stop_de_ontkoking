@@ -23,6 +23,7 @@ export default function RecipesPage() {
   const [searchMealType, setSearchMealType] = useState<MealType | "">("")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [likedRecipes, setLikedRecipes] = useState<Set<string>>(new Set())
   const limit = 9
 
   // Redirect to signup if user is not logged in
@@ -49,6 +50,13 @@ export default function RecipesPage() {
       })
       setRecipes(response.recipes)
       setTotalPages(Math.ceil(response.total / limit))
+      
+      // Check which recipes are liked
+      if (response.recipes.length > 0) {
+        const recipeIds = response.recipes.map(r => r.id)
+        const liked = await recipeAPI.checkIfLiked(recipeIds)
+        setLikedRecipes(liked)
+      }
     } catch (error) {
       console.error("Error fetching recipes:", error)
     } finally {
@@ -66,6 +74,18 @@ export default function RecipesPage() {
     setSearchIngredients(ingredients)
     setSearchMealType(mealType)
     setPage(1)
+  }
+
+  const handleLikeToggle = (recipeId: string, isLiked: boolean) => {
+    setLikedRecipes(prev => {
+      const newSet = new Set(prev)
+      if (isLiked) {
+        newSet.add(recipeId)
+      } else {
+        newSet.delete(recipeId)
+      }
+      return newSet
+    })
   }
 
   useEffect(() => {
@@ -91,7 +111,12 @@ export default function RecipesPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
+                <RecipeCard 
+                  key={recipe.id} 
+                  recipe={recipe} 
+                  isLiked={likedRecipes.has(recipe.id)}
+                  onLikeToggle={handleLikeToggle}
+                />
               ))}
             </div>
 

@@ -1,14 +1,22 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
 import { Recipe } from "@/types/recipe"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Users, ChefHat, User } from "lucide-react"
+import { Clock, Users, ChefHat, Heart } from "lucide-react"
 import { formatTime } from "@/lib/utils"
+import { recipeAPI } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 
 interface RecipeCardProps {
   recipe: Recipe
+  isLiked?: boolean
+  onLikeToggle?: (recipeId: string, isLiked: boolean) => void
 }
 
 const mealTypeLabels: Record<Recipe["meal_type"], string> = {
@@ -29,9 +37,48 @@ const mealTypeColors: Record<Recipe["meal_type"], "default" | "secondary" | "des
   drink: "outline",
 }
 
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, isLiked = false, onLikeToggle }: RecipeCardProps) {
   const totalTime = recipe.preparation_time + recipe.cooking_time
   const ownerInitial = recipe.owner_name?.charAt(0).toUpperCase() || "?"
+  const { toast } = useToast()
+  const { user } = useAuth()
+  const router = useRouter()
+
+  const handleToggleLike = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!user) {
+      toast({
+        title: "Inloggen vereist",
+        description: "Je moet ingelogd zijn om recepten te liken!",
+      })
+      router.push("/signup")
+      return
+    }
+
+    try {
+      const { isLiked: newIsLiked } = await recipeAPI.toggleLike(recipe.id)
+      
+      if (onLikeToggle) {
+        onLikeToggle(recipe.id, newIsLiked)
+      }
+
+      toast({
+        title: newIsLiked ? "Recept geliked!" : "Like verwijderd",
+        description: newIsLiked
+          ? "Je kunt dit recept terugvinden bij je gelikte recepten."
+          : "Het recept is verwijderd uit je likes.",
+      })
+    } catch (error) {
+      console.error("Error toggling like:", error)
+      toast({
+        variant: "destructive",
+        title: "Fout",
+        description: "Er ging iets mis bij het liken van dit recept.",
+      })
+    }
+  }
 
   return (
     <Link href={`/recepten/${recipe.id}`}>
@@ -92,8 +139,8 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             </div>
           </div>
         </CardContent>
-        <CardFooter>
-          <div className="flex flex-wrap gap-1">
+        <CardFooter className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-1 flex-1">
             {recipe.ingredients.slice(0, 3).map((ingredient, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 {ingredient}
@@ -105,6 +152,19 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
               </Badge>
             )}
           </div>
+          <button
+            onClick={handleToggleLike}
+            className="ml-2 transition-all hover:scale-110"
+            aria-label={isLiked ? "Unlike recept" : "Like recept"}
+          >
+            <Heart
+              className={`h-5 w-5 transition-all ${
+                isLiked
+                  ? "fill-red-500 text-red-500"
+                  : "hover:fill-red-500 hover:text-red-500 text-muted-foreground"
+              }`}
+            />
+          </button>
         </CardFooter>
       </Card>
     </Link>

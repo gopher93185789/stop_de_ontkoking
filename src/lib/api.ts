@@ -47,11 +47,9 @@ export const recipeAPI = {
       throw new ApiError(500, error.message);
     }
 
-    // For now, owner info is not fetched due to Supabase auth.users join restrictions
+    // Owner info should already be in the recipes table
     const recipes = (data || []).map((item: any) => ({
       ...item,
-      owner_name: undefined,
-      owner_avatar: undefined,
     }));
 
     return {
@@ -124,6 +122,112 @@ export const recipeAPI = {
     if (error) {
       throw new ApiError(500, error.message);
     }
+  },
+
+  async toggleLike(recipeId: string): Promise<{ isLiked: boolean }> {
+    const {
+      data: { user },
+    } = await supabase!.auth.getUser();
+
+    if (!user) {
+      throw new ApiError(401, "Je moet ingelogd zijn");
+    }
+
+    // Check if already liked
+    const { data: existing } = await supabase!
+      .from("users_liked_recipes")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("recipe_id", recipeId)
+      .single();
+
+    if (existing) {
+      // Unlike
+      const { error } = await supabase!
+        .from("users_liked_recipes")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("recipe_id", recipeId);
+
+      if (error) {
+        throw new ApiError(500, error.message);
+      }
+
+      return { isLiked: false };
+    } else {
+      // Like
+      const { error } = await supabase!
+        .from("users_liked_recipes")
+        .insert({
+          user_id: user.id,
+          recipe_id: recipeId,
+        });
+
+      if (error) {
+        throw new ApiError(500, error.message);
+      }
+
+      return { isLiked: true };
+    }
+  },
+
+  async getLikedRecipes(): Promise<Recipe[]> {
+    const {
+      data: { user },
+    } = await supabase!.auth.getUser();
+
+    if (!user) {
+      throw new ApiError(401, "Je moet ingelogd zijn");
+    }
+
+    const { data, error } = await supabase!
+      .from("users_liked_recipes")
+      .select("recipe_id")
+      .eq("user_id", user.id);
+
+    if (error) {
+      throw new ApiError(500, error.message);
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const recipeIds = data.map((item) => item.recipe_id);
+
+    const { data: recipes, error: recipesError } = await supabase!
+      .from("recipes")
+      .select("*")
+      .in("id", recipeIds);
+
+    if (recipesError) {
+      throw new ApiError(500, recipesError.message);
+    }
+
+    return recipes as Recipe[];
+  },
+
+  async checkIfLiked(recipeIds: string[]): Promise<Set<string>> {
+    const {
+      data: { user },
+    } = await supabase!.auth.getUser();
+
+    if (!user || recipeIds.length === 0) {
+      return new Set();
+    }
+
+    const { data, error } = await supabase!
+      .from("users_liked_recipes")
+      .select("recipe_id")
+      .eq("user_id", user.id)
+      .in("recipe_id", recipeIds);
+
+    if (error) {
+      console.error("Error checking likes:", error);
+      return new Set();
+    }
+
+    return new Set((data || []).map((item) => item.recipe_id));
   },
 }
 

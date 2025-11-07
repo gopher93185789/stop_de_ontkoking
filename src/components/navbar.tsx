@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut, User, Menu, X, Home, BookOpen, Plus, Settings, ChefHat } from "lucide-react"
+import { LogOut, User, Menu, X, Home, BookOpen, Plus, Settings, ChefHat, Heart } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/recepten", label: "Recepten", icon: BookOpen },
+    ...(user ? [{ href: "/liked", label: "Gelikte Recepten", icon: Heart }] : []),
     ...(user ? [{ href: "/recepten/nieuw", label: "Nieuw Recept", icon: Plus }] : []),
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Settings }] : []),
   ]
@@ -113,10 +114,10 @@ export function Navbar() {
                       <span>Profiel</span>
                     </Link>
                   </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild>
                     <Link href="/liked">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Liked</span>
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Gelikte Recepten</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

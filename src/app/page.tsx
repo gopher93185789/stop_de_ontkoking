@@ -29,6 +29,7 @@ export default function LandingPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<MealType | "all">("all")
+  const [likedRecipes, setLikedRecipes] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -39,6 +40,13 @@ export default function LandingPage() {
           page: 1,
         })
         setRecipes(response.recipes)
+        
+        // Check which recipes are liked
+        if (user && response.recipes.length > 0) {
+          const recipeIds = response.recipes.map(r => r.id)
+          const liked = await recipeAPI.checkIfLiked(recipeIds)
+          setLikedRecipes(liked)
+        }
       } catch (error) {
         console.error("Error fetching recipes:", error)
       } finally {
@@ -47,7 +55,7 @@ export default function LandingPage() {
     }
 
     fetchRecipes()
-  }, [selectedCategory])
+  }, [selectedCategory, user])
 
   const handleRecipeClick = (e: React.MouseEvent) => {
     if (!user) {
@@ -68,6 +76,48 @@ export default function LandingPage() {
         description: "Maak een account aan om alle recepten te bekijken!",
       })
       router.push("/signup")
+    }
+  }
+
+  const handleToggleLike = async (e: React.MouseEvent, recipeId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!user) {
+      toast({
+        title: "Inloggen vereist",
+        description: "Je moet ingelogd zijn om recepten te liken!",
+      })
+      router.push("/signup")
+      return
+    }
+
+    try {
+      const { isLiked } = await recipeAPI.toggleLike(recipeId)
+      
+      setLikedRecipes(prev => {
+        const newSet = new Set(prev)
+        if (isLiked) {
+          newSet.add(recipeId)
+        } else {
+          newSet.delete(recipeId)
+        }
+        return newSet
+      })
+
+      toast({
+        title: isLiked ? "Recept geliked!" : "Like verwijderd",
+        description: isLiked 
+          ? "Je kunt dit recept terugvinden bij je gelikte recepten." 
+          : "Het recept is verwijderd uit je likes.",
+      })
+    } catch (error) {
+      console.error("Error toggling like:", error)
+      toast({
+        variant: "destructive",
+        title: "Fout",
+        description: "Er ging iets mis bij het liken van dit recept.",
+      })
     }
   }
 
@@ -257,11 +307,24 @@ export default function LandingPage() {
                             </div>
 
                             {/* Meta */}
-                              <div onClick= {() => {}} className="flex items-center justify-between pt-2"  style={{ borderTopColor: "#e7e5e4", borderTopWidth: "1px" }}>
+                            <div className="flex items-center justify-between pt-2" style={{ borderTopColor: "#e7e5e4", borderTopWidth: "1px" }}>
                               <span className="text-xs font-medium px-3 py-1 rounded" style={{ color: "#84cc16", backgroundColor: "#f0fdf4" }}>
                                 {recipe.ingredients?.length || 0} ingrediënten
                               </span>
-                              <Heart className="h-4 w-4 transition-all hover:fill-red-500 hover:text-red-500" style={{ color: "#e7e5e4" }} />
+                              <button
+                                onClick={(e) => handleToggleLike(e, recipe.id)}
+                                className="transition-all hover:scale-110"
+                                aria-label={likedRecipes.has(recipe.id) ? "Unlike recept" : "Like recept"}
+                              >
+                                <Heart 
+                                  className={`h-4 w-4 transition-all ${
+                                    likedRecipes.has(recipe.id) 
+                                      ? "fill-red-500 text-red-500" 
+                                      : "hover:fill-red-500 hover:text-red-500"
+                                  }`} 
+                                  style={{ color: likedRecipes.has(recipe.id) ? "#ef4444" : "#e7e5e4" }} 
+                                />
+                              </button>
                             </div>
 
   

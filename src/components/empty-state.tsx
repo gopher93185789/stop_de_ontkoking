@@ -1,4 +1,4 @@
-import { ChefHat, Search, Frown } from "lucide-react"
+import { ChefHat, Search, Frown, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -9,7 +9,7 @@ interface EmptyStateProps {
     label: string
     href: string
   }
-  icon?: "chef" | "search" | "sad"
+  icon?: "chef" | "search" | "sad" | "heart"
 }
 
 export function EmptyState({ title, description, action, icon = "chef" }: EmptyStateProps) {
@@ -17,6 +17,7 @@ export function EmptyState({ title, description, action, icon = "chef" }: EmptyS
     chef: ChefHat,
     search: Search,
     sad: Frown,
+    heart: Heart,
   }[icon]
 
   return (

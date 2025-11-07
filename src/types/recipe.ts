@@ -15,6 +15,9 @@ export interface Recipe {
   // Owner info (joined from auth.users)
   owner_name?: string;
   owner_avatar?: string;
+  // Like info
+  is_liked?: boolean;
+  likes_count?: number;
 }
 
 export interface UserLikedRecipeIds {
