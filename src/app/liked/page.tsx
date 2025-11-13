@@ -72,7 +72,7 @@ export default function LikedPage() {
   if (authLoading || loading) {
     return (
       <div className="container py-12 max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Gelikede Recepten</h1>
+        <h1 className="text-4xl font-bold mb-8">gelikete Recepten</h1>
         <RecipeGridSkeleton />
       </div>
     )
@@ -83,7 +83,7 @@ export default function LikedPage() {
       <div className="space-y-8">
         <div className="flex items-center gap-3">
           <Heart className="h-10 w-10 fill-red-500 text-red-500" />
-          <h1 className="text-4xl font-bold">Gelikede Recepten</h1>
+          <h1 className="text-4xl font-bold">gelikete Recepten</h1>
         </div>
 
         {recipes.length > 0 ? (

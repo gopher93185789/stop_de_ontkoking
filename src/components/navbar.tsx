@@ -32,7 +32,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/recepten", label: "Recepten", icon: BookOpen },
-    ...(user ? [{ href: "/liked", label: "Gelikede Recepten", icon: Heart }] : []),
+    ...(user ? [{ href: "/liked", label: "gelikete Recepten", icon: Heart }] : []),
     ...(user ? [{ href: "/recepten/nieuw", label: "Nieuw Recept", icon: Plus }] : []),
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Settings }] : []),
   ]
@@ -117,7 +117,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/liked">
                       <Heart className="mr-2 h-4 w-4" />
-                      <span>Gelikede Recepten</span>
+                      <span>gelikete Recepten</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

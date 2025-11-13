@@ -108,7 +108,7 @@ export default function LandingPage() {
       toast({
         title: isLiked ? "Recept geliked!" : "Like verwijderd",
         description: isLiked 
-          ? "Je kunt dit recept terugvinden bij je gelikede recepten." 
+          ? "Je kunt dit recept terugvinden bij je gelikete recepten." 
           : "Het recept is verwijderd uit je likes.",
       })
     } catch (error) {
